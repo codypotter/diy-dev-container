@@ -35,3 +35,10 @@ Before getting started, ensure you have the following tools installed
 ./dev down
 ```
 
+## Deploying
+
+Ensure you have the secrets set in your environment before running the deploy script.
+
+```sh
+./dev deploy
+```

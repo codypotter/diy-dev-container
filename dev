@@ -20,14 +20,53 @@ run_app() {
     python app/main.py
 }
 
+deploy_stack() {
+    # Check for required environment variables
+    if [ -z "$S3_BUCKET" ] || [ -z "$DB_PASSWORD" ] || [ -z "$VPC_ID" ]; then
+        echo "Error: Required environment variables are not set."
+        echo "Make sure S3_BUCKET, DB_PASSWORD, and VPC_ID are set."
+        exit 1
+    fi
+
+    STACK_NAME="MyLambdaStack"
+    S3_KEY="app.zip"
+    TEMPLATE_FILE="cloudformation.yml"
+
+    echo "Packaging the Lambda function..."
+    zip -r ${S3_KEY} app/
+
+    echo "Uploading the package to S3..."
+    aws s3 cp ${S3_KEY} s3://${S3_BUCKET}/${S3_KEY}
+
+    echo "Deploying the CloudFormation stack..."
+    aws cloudformation deploy \
+        --stack-name ${STACK_NAME} \
+        --template-file ${TEMPLATE_FILE} \
+        --capabilities CAPABILITY_NAMED_IAM \
+        --parameter-overrides \
+            S3Bucket=${S3_BUCKET} \
+            S3Key=${S3_KEY} \
+            DBPassword=${DB_PASSWORD} \
+            VPCSecurityGroupId=${VPC_ID}
+
+    echo "Deployment complete!"
+}
+
+create_bucket() {
+    aws s3 mb s3://diy-dev-container-poc
+}
+
+# Function to deploy the cloudformation stack
 usage() {
     echo "Usage: $0 {command}"
     echo ""
     echo "Available commands:"
-    echo "  up   Start the PostgreSQL database using Docker Compose."
-    echo "  down Stop the PostgreSQL database and remove any orphaned containers."
-    echo "  env  Enter the Nix shell environment for development."
-    echo "  run  Run the Python application (installs dependencies if not already done)."
+    echo "  up            Start the PostgreSQL database using Docker Compose."
+    echo "  down          Stop the PostgreSQL database and remove any orphaned containers."
+    echo "  env           Enter the Nix shell environment for development."
+    echo "  run           Run the Python application (installs dependencies if not already done)."
+    echo "  create-bucket One-time setup to create the s3 bucket to store the lambda files."
+    echo "  deploy        Package and deploy the CloudFormation stack."
     echo ""
 }
 
@@ -37,6 +76,8 @@ case "$1" in
     down) stop_db ;;
     env) enter_nix_shell ;;
     run) run_app ;;
+    create-bucket) create_bucket ;;
+    deploy) deploy_stack ;;
     *) usage ;;
 esac
 

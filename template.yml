@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  MyLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: app.main.lambda_handler
+      Runtime: python3.9
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: diy-dev-container-poc  # Reference the existing bucket
+        S3Key: app.zip
+      Environment:
+        Variables:
+          SECRET_NAME: !Ref MyDatabaseSecret
+          AWS_REGION: !Ref AWS::Region
+
+  MyDatabase:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: "mydatabase-instance"
+      AllocatedStorage: !Ref AllocatedStorage
+      DBInstanceClass: !Ref DBInstanceClass
+      Engine: "postgres"
+      EngineVersion: "15.8"
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DBName: !Ref DBName
+      VPCSecurityGroups:
+        - !Ref MyVPCSecurityGroup
+      BackupRetentionPeriod: 7
+      PubliclyAccessible: false
+
+  MyDatabaseSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: MyDatabaseSecret
+      Description: "Credentials for connecting to the PostgreSQL database"
+      SecretString: !Sub |
+        {
+          "DB_USER": "${DBUsername}",
+          "DB_PASSWORD": "${DBPassword}",
+          "DB_HOST": "${MyDatabase.Endpoint.Address}",
+          "DB_NAME": "${DBName}"
+        }
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${MyDatabaseSecret}*
+
+Outputs:
+  LambdaFunctionName:
+    Value: !Ref MyLambdaFunction
+    Description: "Name of the Lambda function"
+  RDSInstanceEndpoint:
+    Value: !GetAtt MyDatabase.Endpoint.Address
+    Description: "The endpoint address of the RDS instance"
+
