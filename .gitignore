@@ -1,0 +1,96 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Nix and Nix-shell
+result
+*.drv
+.nix-gc*
+.nix-defexpr*
+.nix-profile
+*.lock
+*.log
+
+# Virtual Environments
+venv/
+.env/
+.envrc
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Docker
+docker-compose.override.yml
+docker-compose.override.yaml
+*.log
+*.pid
+*.bak
+*.swp
+docker-compose*.bak
+*.db
+*.sqlite3
+
+# Python
+*.env
+.venv/
+env/
+build/
+dist/
+*.egg-info/
+.eggs/
+.Python
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+*.cover
+coverage.xml
+*.py,cover
+
+# Pytest
+.cache/
+
+# MyPy
+.mypy_cache/
+
+# Cython debug symbols
+cython_debug/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+tags
+
+# OS-specific
+.DS_Store
+*.swp
+Thumbs.db
+
